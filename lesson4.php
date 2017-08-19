@@ -1,17 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="utf-8">
-	<title>PHP: Lesson 4</title>
-	<link rel="stylesheet" type="text/css" href="main.css">
-</head>
-<body>
 <?php
 date_default_timezone_set('America/Chicago');
 $format = "l: F jS, Y h:i A";
 $city = "Dallas, TX";
 $url = "http://api.openweathermap.org/data/2.5/weather?id=4684888&units=imperial&appid=540a6bb97799940883f7994a59ac6ef1";
-$weather = json_decode(file_get_contents ($url));
+//$weather = json_decode(file_get_contents ($url));
+
+if(is_file('cache.txt') && filemtime('cache.txt') > time() - 3600)
+{
+    $weather = file_get_contents('cache.txt');
+}
+else 
+{ 
+    $weather = file_get_contents($url);
+    file_put_contents('cache.txt', $weather);
+}
+
+$weather = json_decode($weather);
 
 /*echo '<pre>';
 print_r($weather);*/
@@ -52,6 +56,14 @@ switch ($current_degrees) {
 }
 
 ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>PHP: Lesson 4</title>
+	<link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
 <h1>Weather in <?= $city ?></h1>
 <table>
 <tr>
