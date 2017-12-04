@@ -1,97 +1,157 @@
-<?php
-date_default_timezone_set('America/Chicago');
-$format = "l: F jS, Y h:i A";
-$city = "Dallas, TX";
-$url = "http://api.openweathermap.org/data/2.5/weather?id=4684888&units=imperial&appid=540a6bb97799940883f7994a59ac6ef1";
-//$weather = json_decode(file_get_contents ($url));
-
-if(is_file('cache.txt') && filemtime('cache.txt') > time() - 3600)
-{
-    $weather = file_get_contents('cache.txt');
+<?php 
+// $file = "cache.cache";
+// if (file_exists($file)){
+// 	$cache_time = 300;
+// 	if ((time() - $cache_time) < filemtime($file)){
+// 		echo file_get_contents($file);
+// 		exit;
+// 	}
+// }
+error_reporting( E_ERROR );
+$appid = "8499bc10de19c0cbe31d89994b60834a";
+$city_get = $_GET['value'];
+if (file_exists('cache.txt') && (time() - 300) < filemtime('cache.txt')) {
+	$json_weather = file_get_contents('cache.txt');
 }
-else 
-{ 
-    $weather = file_get_contents($url);
-    file_put_contents('cache.txt', $weather);
+else {
+	$json_weather = file_get_contents("http://api.openweathermap.org/data/2.5/weather?q=$city_get&lang=ru&units=metric&appid=$appid");
+	file_put_contents('cache.txt', $json_weather);
 }
-
-$weather = json_decode($weather);
-
-/*echo '<pre>';
-print_r($weather);*/
-
-$current_temp = $weather -> main -> temp;
-$current_weather = $weather -> weather[0] -> main;
-$current_description = $weather -> weather[0] -> description;
-$current_pressure = $weather -> main -> pressure;
-$current_humidity = $weather -> main -> humidity;
-$current_wind = $weather -> wind -> speed;
-$current_degrees = $weather -> wind -> deg;
-
-switch ($current_degrees) {
-    case 0:
-        $direction = "North";
-        break;
-    case ($current_degrees > 0 && $current_degrees < 90):
-        $direction = "North-east";
-        break;
-    case 90:
-        $direction = "East";
-        break;
-    case ($current_degrees > 90 && $current_degrees < 180):
-        $direction = "South-east";
-        break;
-    case 180:
-        $direction = "South";
-        break;
-    case ($current_degrees > 180 && $current_degrees < 270):
-        $direction = "South-west";
-        break;
-    case 270:
-        $direction = "West";
-        break;
-    case ($current_degrees > 270 && $current_degrees < 360):
-        $direction = "North-west";
-        break;
-}
+$data = json_decode($json_weather, true);
+$temp = $data[main][temp];
+$desc = $data[weather][0][description];
+$hum = $data[main][humidity];
+$wind_speed = $data[wind][speed];
+$clouds = $data[clouds][all];
+$pic = $data[weather][0][icon];
+$logo = "<img src='http://openweathermap.org/img/w/" . $pic . ".png'>";
 
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="utf-8">
-	<title>PHP: Lesson 4</title>
-	<link rel="stylesheet" type="text/css" href="main.css">
+	<meta charset="UTF-8">
+	<title>weather-meter</title>
+	<link href="https://fonts.googleapis.com/css?family=Barlow+Semi+Condensed:400,700|Lato:400,700&amp;subset=latin-ext" rel="stylesheet">
+	<style>
+		* {
+			
+			margin: 0;
+			padding: 0;
+			font-family: 'Lato', sans-serif;
+			color: #f8d9d1;
+		}
+		body {
+			height: 85vh;
+			background: url(weather_bg.png) center no-repeat;
+			background-size: cover;
+			/*padding-top: 180px;*/
+			font-family: 'Lato', sans-serif;
+		}
+		.wrapper {
+			max-width: 600px;
+			margin: 15vh auto 0 auto;
+			padding: 20px;
+			background-color: rgba(83, 83, 83, 0.5);
+			text-align: center;
+		}
+		h1 {
+			margin-bottom: 20px;
+			font: 700 50px 'Barlow Semi Condensed', sans-serif;
+			color: #f8f7f2;
+			text-transform: uppercase;
+		}
+		form {
+			font-size: 0px;
+			margin-bottom: 20px;
+		}
+		.city {
+			display: inline-block;
+			width: 60%;
+			margin-right: 3%;
+			font-size: 14px;
+			padding: 10px;	
+			color: #535353;
+			text-transform: uppercase;
+		}
+		.city:placeholder {
+			color: #535353;
+		}
+		.search {
+			display: inline-block;
+			width: 33%;
+			font-size: 14px;
+			padding: 10px;
+			text-transform: uppercase;
+			color: #535353;
+			cursor: pointer;
+		}
+		img {
+			display: inline-block;
+			width: 80px;
+			height: auto;
+			line-height: 50px;
+		}
+		.temp {
+			margin-left: 2%;
+			display: inline-block;
+			font-size: 50px;
+			line-height: 50px;
+			vertical-align: top;
+		}
+		.desc {
+			margin-left: 2%;
+			font-size: 30px;
+			text-transform: uppercase;
+		}
+		h2 {
+			padding: 5px;
+			font-size: 24px;
+			line-height: 50px;
+			text-transform: uppercase;
+		}
+		.main-temp {
+			width: 100%;
+			margin: 0 auto;
+			text-align: center;
+			vertical-align: top;
+			font-size: 0;
+		}
+		.other {
+			display: inline-block;
+			padding: 15px;
+			font-size: 18px;
+		}
+	</style>
 </head>
 <body>
-<h1>Weather in <?= $city ?></h1>
-<table>
-<tr>
-	<td>Date &amp; Time</td>
-	<td><?= date($format) ?></td>
-</tr>
-<tr>
-<td>Weather conditions</td>
-<td><?= $current_weather.": ".$current_description ?></td>
-</tr>
-<tr>
-    <td>Temperature</td>
-    <td><?= $current_temp." "."&deg;F" ?></td>
-</tr>
-<tr>
-    <td>Pressure</td>
-    <td><?= $current_pressure." "."hpa" ?></td>
-</tr>
-<tr>
-    <td>Humidity</td>
-    <td><?= $current_humidity." "."%" ?></td>
-</tr>
-<tr>
-    <td>Wind</td>
-    <td><?= $direction." ".$current_wind." "."m/h" ?></td>
-</tr>
-</table>
+	<div class="wrapper">
+		<h1>welcome to weather meter!</h1>
+		<form action="index.php" method="get">
+		<input class="city" type="text" placeholder="Введите Город" name="value">
+		<input class="search" type="submit" value="узнать погоду">
+		</form>
+		<h2>Сегодня: <?= date("d.m.Y H:i") ?></h2>
+		<?php if (!is_null($city_get)): ?>
+				<h2>Город: <?= $city_get ?></h2>
+				<div class='main-temp'>
+					<?= $logo ?>
+					<p class='temp'><?= round($temp) ?><sup> o</sup>C</p>
+					<p class='desc'><?= $desc ?></p>
+				</div>
+				<p class='other'>Влажность: <?= $hum ?> %</p>
+				<p class='other'>Скорость ветра: <?= $wind_speed ?> м/с</p>
+				<p class='other'>Облачность: <?= $clouds ?> %</p>
+		<?php endif; ?>
+	</div>
 </body>
 </html>
-
-
+<!-- <?php 
+	// $write_cache = ob_get_contents();
+	// ob_end_flush();
+	// $file_name = "cache.cache";
+	// $a = fopen($file_name, "w");
+	// fwrite($a, $write_cache);
+	// fclose($a);
+ ?> -->
